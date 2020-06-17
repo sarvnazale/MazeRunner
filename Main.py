@@ -14,6 +14,7 @@ TURTLE_SCALING = 0.8
 TILE_SCALING = 0.5
 COIN_SCALING = 0.35
 
+SPRITE_SCALING = 0.25
 DIVIDER_SCALING = 0.50
 SPRITE_SIZE = 32
 
@@ -26,8 +27,11 @@ TILE_CRATE = 1
 # Maze must have an ODD number of rows and columns.
 # Walls go on EVEN rows/columns.
 # Openings go on ODD rows/columns
-MAZE_HEIGHT = 51
-MAZE_WIDTH = 51
+#MAZE_HEIGHT = 51
+#MAZE_WIDTH = 51
+
+MAZE_HEIGHT = 41
+MAZE_WIDTH = 41
 
 MERGE_SPRITES = True
 
@@ -110,10 +114,9 @@ def pause_screen():
     texture = arcade.load_texture("pausescreen.png")
     arcade.draw_texture_rectangle (500, 400, scale * texture.width,
                                   scale * texture.height, texture, 0)
-    
+
 def second_level():
     pass
-
 
 #Main application class
 class MyGame(arcade.Window):
@@ -163,16 +166,10 @@ class MyGame(arcade.Window):
         self.coin_list = arcade.SpriteList(use_spatial_hash=True) #the wall and coins won't move
         self.coin = arcade.SpriteList()
 
-        # Create the divider
-        for x in range(0, 1000, 10):
-            wall = arcade.Sprite("boxCrate_double.png", 0.2)
-            wall.center_x = x
-            wall.center_y = 400
-            self.wall_list.append(wall)
 
         #Creates the ground
         for x in range(0, 1250, 64):
-            wall = arcade.Sprite(":resources:images/tiles/grassMid.png", TILE_SCALING)
+            wall = arcade.Sprite("dirtCenter.png", TILE_SCALING)
             wall.center_x = x
             wall.center_y = 0
             self.wall_list.append(wall)
@@ -180,45 +177,36 @@ class MyGame(arcade.Window):
 
         #creates the top part
         for x in range(0, 1250, 64):
-            wall = arcade.Sprite(":resources:images/tiles/grassMid.png", TILE_SCALING)
+            wall = arcade.Sprite("dirtCenter.png", TILE_SCALING)
             wall.center_x = x
             wall.center_y = 800
             self.wall_list.append(wall)
 
-        #make the maze
+        # Create the maze
         maze = make_maze_depth_first(MAZE_WIDTH, MAZE_HEIGHT)
+        
+        # Create the divider
+        for x in range(0, 1000, 10):
+            wall = arcade.Sprite("dirtCenter.png",  TILE_SCALING)
+            wall.center_x = x
+            wall.center_y = 400
+            self.wall_list.append(wall)
 
-        #Create divider 
-        if not MERGE_SPRITES:
-            for row in range(MAZE_HEIGHT):
+        # Create the right wall
+        for x in range(0, 1000, 10):
+            wall = arcade.Sprite("dirtCenter.png",  TILE_SCALING)
+            wall.center_x = 1000
+            wall.center_y = x
+            self.wall_list.append(wall)
+
+        # Create sprites based on 2D grid
+        for row in range(MAZE_HEIGHT):
                 for column in range(MAZE_WIDTH):
                     if maze[row][column] == 1:
-                        wall = arcade.Sprite(":resources:images/tiles/grassCenter.png", DIVIDER_SCALING)
+                        wall = arcade.Sprite(":resources:images/tiles/dirtCenter.png", SPRITE_SCALING)
                         wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
                         wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
                         self.wall_list.append(wall)
-        else:
-            for row in range(MAZE_HEIGHT):
-                column = 0
-                while column < len(maze):
-                    while column < len(maze) and maze[row][column] == 0:
-                        column += 1
-                    start_column = column
-                    while column < len(maze) and maze[row][column] == 1:
-                        column += 1
-                    end_column = column - 1
-
-                    column_count = end_column - start_column + 1
-                    column_mid = (start_column + end_column) / 2
-
-                    wall = arcade.Sprite(":resources:images/tiles/grassCenter.png", DIVIDER_SCALING,
-                                         repeat_count_x=column_count)
-                    wall.center_x = column_mid * SPRITE_SIZE + SPRITE_SIZE / 2
-                    wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
-                    wall.width = SPRITE_SIZE * column_count
-                    self.wall_list.append(wall)
-
-        
         #set up bunny
         image_source_1 = "bunny.png"
         self.bunny_sprite = arcade.Sprite(image_source_1, BUNNY_SCALING)
@@ -249,6 +237,8 @@ class MyGame(arcade.Window):
             if len(walls_hit_bunny) == 0 and len(walls_hit_turtle) == 0:
                 players_placed = True
             
+    
+        
         self.physics_engine_bunny = arcade.PhysicsEngineSimple(self.bunny_sprite, self.wall_list)
         self.physics_engine_turtle = arcade.PhysicsEngineSimple(self.turtle_sprite, self.wall_list)
 
@@ -359,9 +349,14 @@ class MyGame(arcade.Window):
         if pause:
             pause_screen()
 
+        if level_two:
+            second_level()
    
     def on_update(self, delta_time):
+        global run_game 
+
         """used for movement and game logic, updated 60 times per second """
+        
         start_time = timeit.default_timer()
         
         #Start the game
@@ -394,7 +389,9 @@ class MyGame(arcade.Window):
                 # Add one to the score
                 self.score_turtle += 1
 
-        #if len(coin_hit_list_bunny) == 0 or len(coin_hit_list_turtle) == 0:
+            if len(self.coin_list) == 0:
+                run_game = False
+                level_two = True
             
 
 
