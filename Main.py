@@ -14,9 +14,8 @@ TURTLE_SCALING = 0.8
 TILE_SCALING = 0.5
 COIN_SCALING = 0.35
 
-DIVIDER_SCALING = 0.25
+DIVIDER_SCALING = 0.50
 SPRITE_SIZE = 32
-
 
 # Speed constant 
 PLAYER_MOVEMENT_SPEED = 5
@@ -39,10 +38,11 @@ VIEWPORT_MARGIN = 200
 #set booleans for game control
 start_game = True
 run_game = False
+level_two = False
 end_game = False
 pause = False
 
-
+#Create maze
 def _create_grid_with_cells(width, height):
     """ Create a grid with empty cells on odd row/column combinations. """
     grid = []
@@ -111,6 +111,8 @@ def pause_screen():
     arcade.draw_texture_rectangle (500, 400, scale * texture.width,
                                   scale * texture.height, texture, 0)
     
+def second_level():
+    pass
 
 
 #Main application class
@@ -161,12 +163,26 @@ class MyGame(arcade.Window):
         self.coin_list = arcade.SpriteList(use_spatial_hash=True) #the wall and coins won't move
         self.coin = arcade.SpriteList()
 
-        # Create the ground
-        # Uses a loop to place multiple sprites horizontally
+        # Create the divider
+        for x in range(0, 1000, 10):
+            wall = arcade.Sprite("boxCrate_double.png", 0.2)
+            wall.center_x = x
+            wall.center_y = 400
+            self.wall_list.append(wall)
+
+        #Creates the ground
         for x in range(0, 1250, 64):
             wall = arcade.Sprite(":resources:images/tiles/grassMid.png", TILE_SCALING)
             wall.center_x = x
-            wall.center_y = 400
+            wall.center_y = 0
+            self.wall_list.append(wall)
+
+
+        #creates the top part
+        for x in range(0, 1250, 64):
+            wall = arcade.Sprite(":resources:images/tiles/grassMid.png", TILE_SCALING)
+            wall.center_x = x
+            wall.center_y = 800
             self.wall_list.append(wall)
 
         #make the maze
@@ -378,6 +394,9 @@ class MyGame(arcade.Window):
                 # Add one to the score
                 self.score_turtle += 1
 
+        #if len(coin_hit_list_bunny) == 0 or len(coin_hit_list_turtle) == 0:
+            
+
 
 
 def main():
@@ -386,6 +405,6 @@ def main():
     window.setup()
     arcade.run()
 
-
+# calls the main function to get the program started
 if __name__ == "__main__":
     main()
