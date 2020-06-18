@@ -1,5 +1,4 @@
 import arcade
-import timeit
 import random
 from numpy.random import randint
 
@@ -45,44 +44,98 @@ end_game = False
 pause = False
 
 #Create maze
-def _create_grid_with_cells(width, height):
-    """ Create a grid with empty cells on odd row/column combinations. """
+def create_empty_grid(width, height, default_value=TILE_EMPTY):
+    """ Create an empty grid. """
     grid = []
     for row in range(height):
         grid.append([])
         for column in range(width):
-            if column % 2 == 1 and row % 2 == 1:
-                grid[row].append(TILE_EMPTY)
-            elif column == 0 or row == 0 or column == width - 1 or row == height - 1:
-                grid[row].append(TILE_CRATE)
-            else:
-                grid[row].append(TILE_CRATE)
+            grid[row].append(default_value)
     return grid
 
-def make_maze_depth_first(maze_width, maze_height):
-    maze = _create_grid_with_cells(maze_width, maze_height)
 
-    w = (len(maze[0]) - 1) // 2
-    h = (len(maze) - 1) // 2
-    vis = [[0] * w + [1] for _ in range(h)] + [[1] * (w + 1)]
+def create_outside_walls(maze):
+    """ Create outside border walls."""
 
-    def walk(x: int, y: int):
-        vis[y][x] = 1
+    # Create left and right walls
+    for row in range(len(maze)):
+        maze[row][0] = TILE_CRATE
+        maze[row][len(maze[row])-1] = TILE_CRATE
 
-        d = [(x - 1, y), (x, y + 1), (x + 1, y), (x, y - 1)]
-        random.shuffle(d)
-        for (xx, yy) in d:
-            if vis[yy][xx]:
-                continue
-            if xx == x:
-                maze[max(y, yy) * 2][x * 2 + 1] = TILE_EMPTY
-            if yy == y:
-                maze[y * 2 + 1][max(x, xx) * 2] = TILE_EMPTY
+    # Create top and bottom walls
+    for column in range(1, len(maze[0]) - 1):
+        maze[0][column] = TILE_CRATE
+        maze[len(maze) - 1][column] = TILE_CRATE
 
-            walk(xx, yy)
 
-    walk(random.randrange(w), random.randrange(h))
+def make_maze_recursive_call(maze, top, bottom, left, right):
+    """
+    Recursive function to divide up the maze in four sections
+    and create three gaps.
+    Walls can only go on even numbered rows/columns.
+    Gaps can only go on odd numbered rows/columns.
+    Maze must have an ODD number of rows and columns.
+    """
 
+    # Figure out where to divide horizontally
+    start_range = bottom + 2
+    end_range = top - 1
+    y = random.randrange(start_range, end_range, 2)
+
+    # Do the division
+    for column in range(left + 1, right):
+        maze[y][column] = TILE_CRATE
+
+    # Figure out where to divide vertically
+    start_range = left + 2
+    end_range = right - 1
+    x = random.randrange(start_range, end_range, 2)
+
+    # Do the division
+    for row in range(bottom + 1, top):
+        maze[row][x] = TILE_CRATE
+
+    # Now we'll make a gap on 3 of the 4 walls.
+    # Figure out which wall does NOT get a gap.
+    wall = random.randrange(4)
+    if wall != 0:
+        gap = random.randrange(left + 1, x, 2)
+        maze[y][gap] = TILE_EMPTY
+
+    if wall != 1:
+        gap = random.randrange(x + 1, right, 2)
+        maze[y][gap] = TILE_EMPTY
+
+    if wall != 2:
+        gap = random.randrange(bottom + 1, y, 2)
+        maze[gap][x] = TILE_EMPTY
+
+    if wall != 3:
+        gap = random.randrange(y + 1, top, 2)
+        maze[gap][x] = TILE_EMPTY
+
+    # If there's enough space, to a recursive call.
+    if top > y + 3 and x > left + 3:
+        make_maze_recursive_call(maze, top, y, left, x)
+
+    if top > y + 3 and x + 3 < right:
+        make_maze_recursive_call(maze, top, y, x, right)
+
+    if bottom + 3 < y and x + 3 < right:
+        make_maze_recursive_call(maze, y, bottom, x, right)
+
+    if bottom + 3 < y and x > left + 3:
+        make_maze_recursive_call(maze, y, bottom, left, x)
+
+
+def make_maze_recursion(maze_width, maze_height):
+    """ Make the maze by recursively splitting it into four rooms. """
+    maze = create_empty_grid(maze_width, maze_height)
+    # Fill in the outside walls
+    create_outside_walls(maze)
+
+    # Start the recursive process
+    make_maze_recursive_call(maze, maze_height - 1, 0, 0, maze_width - 1)
     return maze
 
 
@@ -97,11 +150,11 @@ def draw_main_screen(x: int, y: int):
 def draw_background():
     arcade.set_background_color(arcade.csscolor.LIGHT_GOLDENROD_YELLOW)
 
-def draw_end_screen(x: int, y: int):
+def draw_end_screen():
     scale = 1.1
     #sets a new background, draws end game text
     texture = arcade.load_texture("endscreen.png")
-    arcade.draw_texture_rectangle(x, y, scale * texture.width,
+    arcade.draw_texture_rectangle(500, 400, scale * texture.width,
                                   scale * texture.height, texture, 0)
 
     arcade.draw_text("GAME OVER!", 270, 500, arcade.color.WHITE, 65)
@@ -112,7 +165,6 @@ def pause_screen():
     texture = arcade.load_texture("pausescreen.png")
     arcade.draw_texture_rectangle (500, 400, scale * texture.width,
                                   scale * texture.height, texture, 0)
-
 
 
 #Main application class
@@ -148,10 +200,12 @@ class MyGame(arcade.Window):
         self.collect_coin_sound_bunny = arcade.load_sound("coin1.wav")
         self.collect_coin_sound_turtle = arcade.load_sound("coin5.wav")
         
+        self.total_time = 00.0
 
     def setup(self):
         #used to set up the game and restart when the game is over
-        
+        self.total_time = 60.0
+
         # Keep track of the score
         self.score_bunny = 0
         self.score_turtle = 0
@@ -161,7 +215,7 @@ class MyGame(arcade.Window):
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList(use_spatial_hash=True) #spatial_hash is used because 
         self.coin_list = arcade.SpriteList(use_spatial_hash=True) #the wall and coins won't move
-        self.coin = arcade.SpriteList()
+        
 
 
         #Creates the ground
@@ -180,14 +234,8 @@ class MyGame(arcade.Window):
             self.wall_list.append(wall)
 
         # Create the maze
-        maze = make_maze_depth_first(MAZE_WIDTH, MAZE_HEIGHT)
+        maze = make_maze_recursion(MAZE_WIDTH, MAZE_HEIGHT)
         
-        # Create the divider
-        for x in range(0, 1000, 10):
-            wall = arcade.Sprite("dirtCenter.png",  TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 400
-            self.wall_list.append(wall)
 
         # Create the right wall
         for x in range(0, 1000, 10):
@@ -218,15 +266,15 @@ class MyGame(arcade.Window):
         # I had to use this because sometimes they would be placed on the wall in the begginning
         # And then they couldn't move at all
         players_placed = False
-        while not players_placed:
+        while players_placed == False:
             
             #place bunny
-            self.bunny_sprite.center_x = randint(40, 50)
-            self.bunny_sprite.center_y = randint(60, 70)
+            self.bunny_sprite.center_x = randint(40, 600)
+            self.bunny_sprite.center_y = randint(60, 600)
 
             #place turtle
-            self.turtle_sprite.center_x = randint(40, 50)
-            self.turtle_sprite.center_y = randint(680, 700)
+            self.turtle_sprite.center_x = randint(40, 600)
+            self.turtle_sprite.center_y = randint(60, 600)
 
             #Check to see if sprites would be placed in wall
             walls_hit_bunny = arcade.check_for_collision_with_list(self.bunny_sprite, self.wall_list)
@@ -239,21 +287,20 @@ class MyGame(arcade.Window):
         self.physics_engine_bunny = arcade.PhysicsEngineSimple(self.bunny_sprite, self.wall_list)
         self.physics_engine_turtle = arcade.PhysicsEngineSimple(self.turtle_sprite, self.wall_list)
 
+        """ place coins randomly, and ensure that they aren't placed on walls"""     
+        for x in range(128, 1250, 50):
+            coin_placed = False
+            while coin_placed == False:
+                self.coin = arcade.Sprite(":resources:images/items/coinGold.png", COIN_SCALING)
+                self.coin.center_x = randint(50, 900)
+                self.coin.center_y = randint(50, 750)
+                wall_hit_coin = arcade.check_for_collision_with_list(self.coin, self.wall_list)
+                if len(wall_hit_coin) == 0:
+                    self.coin_list.append(self.coin)
+                    coin_placed = True             
+   
 
-        """  the following two loops had to be separated so that I could 
-        have an equal number of coins for each player """
-        #set up coins randomly for bunny and make sure they aren't on a wall
-        for x in range(128, 1250, 100):
-            coin = arcade.Sprite(":resources:images/items/coinGold.png", COIN_SCALING)
-            coin.center_x = x
-            coin.center_y = randint(50, 300)
-            self.coin_list.append(coin) 
-                       
-        for x in range(128, 1250, 100):
-            coin = arcade.Sprite(":resources:images/items/coinGold.png", COIN_SCALING)
-            coin.center_x = x
-            coin.center_y = randint(500, 700)
-            self.coin_list.append(coin) 
+        
 
     def on_key_press(self, key, modifiers):
         global start_game, run_game, pause
@@ -312,7 +359,7 @@ class MyGame(arcade.Window):
         
 
     def on_draw(self):
-        global start_game, run_game, pause
+        global start_game, run_game, pause, end_game
         #render screen
         arcade.start_render()
 
@@ -334,31 +381,50 @@ class MyGame(arcade.Window):
 
              # Draw score on the screen
             score_text_bunny = f"Bunny Score: {self.score_bunny}"
-            arcade.draw_text(score_text_bunny, 20, 7, arcade.csscolor.WHITE, 16)
+            arcade.draw_text(score_text_bunny, 20, 7, arcade.csscolor.BLACK, 16)
             #self.score_text.draw()
             #arcade.draw_text(score_text)
     
             score_text_turtle = f"Turtle Score: {self.score_turtle}"
             arcade.draw_text(score_text_turtle, 
-                         20,
-                         HEIGHT - 420,
-                         arcade.color.WHITE, 16)
+                         200 ,7,
+                         arcade.color.BLACK, 16)
+
+            # Calculate minutes
+            minutes = int(self.total_time) // 60
+
+            # Calculate seconds by using a modulus (remainder)
+            seconds = int(self.total_time) % 60
+
+            # Figure out our output
+            output = f"Time: {minutes:02d}:{seconds:02d}"
+
+            # Output the timer text.
+            arcade.draw_text(output, 600, 7, arcade.color.BLACK, 16)
+
+
         if pause:
             pause_screen()
 
+        if end_game:
+            draw_end_screen()
+
    
     def on_update(self, delta_time):
-        global run_game 
+        global run_game, end_game
 
         """used for movement and game logic, updated 60 times per second """
-        
-        start_time = timeit.default_timer()
         
         #Start the game
         if run_game: 
             self.physics_engine_bunny.update()
             self.physics_engine_turtle.update()
         
+            self.total_time -= delta_time
+            if self.total_time == 00.00:
+                run_game = False
+                end_game = True
+
             # See if we hit any coins
             coin_hit_list_bunny = arcade.check_for_collision_with_list(self.bunny_sprite,
                                                              self.coin_list)
@@ -366,7 +432,7 @@ class MyGame(arcade.Window):
             coin_hit_list_turtle = arcade.check_for_collision_with_list(self.turtle_sprite,
                                                              self.coin_list)
 
-        # Loop through each coin hit by the bunny and remove it
+            # Loop through each coin hit by the bunny and remove it
             for coin in coin_hit_list_bunny:
             # Remove the coin
                 coin.remove_from_sprite_lists()
@@ -375,7 +441,7 @@ class MyGame(arcade.Window):
             # Add one to the score
                 self.score_bunny += 1
             
-        #Loop through each coin hit by the turtle and remove it
+            #Loop through each coin hit by the turtle and remove it
             for coin in coin_hit_list_turtle:
                 # Remove the coin
                 coin.remove_from_sprite_lists()
@@ -384,11 +450,11 @@ class MyGame(arcade.Window):
                 # Add one to the score
                 self.score_turtle += 1
 
-            if len(self.coin_list) == 0:
-                run_game = False
-              
             
 
+
+      
+    
 
 
 def main():
