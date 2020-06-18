@@ -43,6 +43,7 @@ run_game = False
 end_game = False
 pause = False
 
+
 #Create maze
 def create_empty_grid(width, height, default_value=TILE_EMPTY):
     """ Create an empty grid. """
@@ -150,14 +151,18 @@ def draw_main_screen(x: int, y: int):
 def draw_background():
     arcade.set_background_color(arcade.csscolor.LIGHT_GOLDENROD_YELLOW)
 
-def draw_end_screen():
-    scale = 1.1
+def draw_end_screen(x: int, y: int, winner):
+    scale = 3
     #sets a new background, draws end game text
     texture = arcade.load_texture("endscreen.png")
-    arcade.draw_texture_rectangle(500, 400, scale * texture.width,
+    arcade.draw_texture_rectangle(x, y, scale * texture.width,
                                   scale * texture.height, texture, 0)
 
-    arcade.draw_text("GAME OVER!", 270, 500, arcade.color.WHITE, 65)
+    arcade.draw_text("GAME OVER!", 270, 500, arcade.color.BLACK, 65)
+    arcade.draw_text("The winner of the game is...", 270, 300, arcade.color.BLACK, 30)
+    arcade.draw_text(winner, 420, 230, arcade.color.BLACK, 30)
+    
+
 
 def pause_screen():
     """ creates a pause screen """
@@ -185,16 +190,17 @@ class MyGame(arcade.Window):
         self.bunny_sprite = None
         self.turtle_sprite = None
         
+        #coin variable
         self.coin = None
         
-        #physics engine
+        #physics engine for each player
         self.physics_engine_bunny = None
         self.physics_engine_turtle = None
 
         # Keep track of the score
         self.score_bunny = 0
         self.score_turtle = 0
-        
+    
 
         # Load sounds
         self.collect_coin_sound_bunny = arcade.load_sound("coin1.wav")
@@ -204,7 +210,7 @@ class MyGame(arcade.Window):
 
     def setup(self):
         #used to set up the game and restart when the game is over
-        self.total_time = 60.0
+        self.total_time = 00.0
 
         # Keep track of the score
         self.score_bunny = 0
@@ -402,12 +408,22 @@ class MyGame(arcade.Window):
             # Output the timer text.
             arcade.draw_text(output, 600, 7, arcade.color.BLACK, 16)
 
-
+        if self.total_time >= 60:
+            run_game = False
+            end_game = True
+            
+        
         if pause:
             pause_screen()
 
         if end_game:
-            draw_end_screen()
+            if self.score_bunny > self.score_turtle:
+                draw_end_screen(500, 375, "Bunny!")
+            elif self.score_turtle > self.score_bunny:
+                draw_end_screen(500, 375, "Turtle!")
+            else:
+                draw_end_screen(500, 375, "It's a tie!")
+            
 
    
     def on_update(self, delta_time):
@@ -419,11 +435,6 @@ class MyGame(arcade.Window):
         if run_game: 
             self.physics_engine_bunny.update()
             self.physics_engine_turtle.update()
-        
-            self.total_time -= delta_time
-            if self.total_time == 00.00:
-                run_game = False
-                end_game = True
 
             # See if we hit any coins
             coin_hit_list_bunny = arcade.check_for_collision_with_list(self.bunny_sprite,
@@ -449,13 +460,8 @@ class MyGame(arcade.Window):
                 arcade.play_sound(self.collect_coin_sound_turtle)
                 # Add one to the score
                 self.score_turtle += 1
-
             
-
-
-      
-    
-
+            self.total_time += delta_time
 
 def main():
     """ Main method """
