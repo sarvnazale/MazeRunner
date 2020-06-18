@@ -22,8 +22,8 @@ PLAYER_MOVEMENT_SPEED = 5
 #Maze Constants 
 TILE_EMPTY = 0
 TILE_CRATE = 1
-MAZE_HEIGHT = 49
-MAZE_WIDTH = 49
+MAZE_HEIGHT = 57
+MAZE_WIDTH = 57
 
 
 # How many pixels to keep as a minimum margin between the character
@@ -51,8 +51,7 @@ def create_empty_grid(x: int, y: int, default_value=TILE_EMPTY):
 def make_maze_recursive_call(maze, top, bottom, left, right):
     
     # Divide up the maze into four functions with three gaps generated randomly
-    
-    #Horizontal cuts 
+    # Figure out where to divide horizontally
     start = bottom + 2
     end = top - 1
     y = random.randrange(start, end, 2)
