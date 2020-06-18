@@ -22,8 +22,8 @@ PLAYER_MOVEMENT_SPEED = 5
 #Maze Constants 
 TILE_EMPTY = 0
 TILE_CRATE = 1
-MAZE_HEIGHT = 51
-MAZE_WIDTH = 51
+MAZE_HEIGHT = 49
+MAZE_WIDTH = 49
 
 
 # How many pixels to keep as a minimum margin between the character
@@ -38,43 +38,24 @@ pause = False
 
 
 #Create maze using a recurive algorithm 
-def create_empty_grid(width, height, default_value=TILE_EMPTY):
-    """ Create an empty grid. """
+def create_empty_grid(x: int, y: int, default_value=TILE_EMPTY):
+    #Create empty grid list
     grid = []
-    for row in range(height):
+    #Create grid for screen
+    for row in range(y):
         grid.append([])
-        for column in range(width):
+        for column in range(x):
             grid[row].append(default_value)
     return grid
 
-
-def create_outside_walls(maze):
-    """ Create outside border walls."""
-
-    # Create left and right walls
-    for row in range(len(maze)):
-        maze[row][0] = TILE_CRATE
-        maze[row][len(maze[row])-1] = TILE_CRATE
-
-    # Create top and bottom walls
-    for column in range(1, len(maze[0]) - 1):
-        maze[0][column] = TILE_CRATE
-        maze[len(maze) - 1][column] = TILE_CRATE
-
-
 def make_maze_recursive_call(maze, top, bottom, left, right):
-    """
-    Recursive function to divide up the maze in four sections
-    and create three gaps.
-    Walls can only go on even numbered rows/columns.
-    Gaps can only go on odd numbered rows/columns.
-    Maze must have an ODD number of rows and columns.
-    """
-
-    # Figure out where to divide horizontally
-    start_range = bottom + 2
-    end_range = top - 1
-    y = random.randrange(start_range, end_range, 2)
+    
+    # Divide up the maze into four functions with three gaps generated randomly
+    
+    #Horizontal cuts 
+    start = bottom + 2
+    end = top - 1
+    y = random.randrange(start, end, 2)
 
     # Do the division
     for column in range(left + 1, right):
@@ -89,7 +70,6 @@ def make_maze_recursive_call(maze, top, bottom, left, right):
     for row in range(bottom + 1, top):
         maze[row][x] = TILE_CRATE
 
-    # Now we'll make a gap on 3 of the 4 walls.
     # Figure out which wall does NOT get a gap.
     wall = random.randrange(4)
     if wall != 0:
@@ -123,15 +103,11 @@ def make_maze_recursive_call(maze, top, bottom, left, right):
 
 
 def make_maze_recursion(maze_width, maze_height):
-    """ Make the maze by recursively splitting it into four rooms. """
+    #Make the maze and start the process
     maze = create_empty_grid(maze_width, maze_height)
-    # Fill in the outside walls
-    create_outside_walls(maze)
-
-    # Start the recursive process
     make_maze_recursive_call(maze, maze_height - 1, 0, 0, maze_width - 1)
+    #return final result
     return maze
-
 
 def draw_main_screen(x: int, y: int):
     # sets a new background, draws title text
@@ -234,6 +210,13 @@ class MyGame(arcade.Window):
         for x in range(0, 1000, 10):
             wall = arcade.Sprite("dirtCenter.png",  TILE_SCALING)
             wall.center_x = 1000
+            wall.center_y = x
+            self.wall_list.append(wall)
+
+        # Create the righleftt wall
+        for x in range(0, 1000, 10):
+            wall = arcade.Sprite("dirtCenter.png",  TILE_SCALING)
+            wall.center_x = 0
             wall.center_y = x
             self.wall_list.append(wall)
 
