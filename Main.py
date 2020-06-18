@@ -22,8 +22,8 @@ PLAYER_MOVEMENT_SPEED = 5
 #Maze Constants 
 TILE_EMPTY = 0
 TILE_CRATE = 1
-MAZE_HEIGHT = 57
-MAZE_WIDTH = 57
+MAZE_HEIGHT = 53
+MAZE_WIDTH = 53
 
 
 # How many pixels to keep as a minimum margin between the character
@@ -37,106 +37,6 @@ end_game = False
 pause = False
 
 
-#Create maze using a recurive algorithm 
-def create_empty_grid(x: int, y: int, default_value=TILE_EMPTY):
-    #Create empty grid list
-    grid = []
-    #Create grid for screen
-    for row in range(y):
-        grid.append([])
-        for column in range(x):
-            grid[row].append(default_value)
-    return grid
-
-def make_maze_recursive_call(maze, top, bottom, left, right):
-    
-    # Divide up the maze into four functions with three gaps generated randomly
-    # Figure out where to divide horizontally
-    start = bottom + 2
-    end = top - 1
-    y = random.randrange(start, end, 2)
-
-    # Do the division
-    for column in range(left + 1, right):
-        maze[y][column] = TILE_CRATE
-
-    # Figure out where to divide vertically
-    start_range = left + 2
-    end_range = right - 1
-    x = random.randrange(start_range, end_range, 2)
-
-    # Do the division
-    for row in range(bottom + 1, top):
-        maze[row][x] = TILE_CRATE
-
-    # Figure out which wall does NOT get a gap.
-    wall = random.randrange(4)
-    if wall != 0:
-        gap = random.randrange(left + 1, x, 2)
-        maze[y][gap] = TILE_EMPTY
-
-    if wall != 1:
-        gap = random.randrange(x + 1, right, 2)
-        maze[y][gap] = TILE_EMPTY
-
-    if wall != 2:
-        gap = random.randrange(bottom + 1, y, 2)
-        maze[gap][x] = TILE_EMPTY
-
-    if wall != 3:
-        gap = random.randrange(y + 1, top, 2)
-        maze[gap][x] = TILE_EMPTY
-
-    # If there's enough space, to a recursive call.
-    if top > y + 3 and x > left + 3:
-        make_maze_recursive_call(maze, top, y, left, x)
-
-    if top > y + 3 and x + 3 < right:
-        make_maze_recursive_call(maze, top, y, x, right)
-
-    if bottom + 3 < y and x + 3 < right:
-        make_maze_recursive_call(maze, y, bottom, x, right)
-
-    if bottom + 3 < y and x > left + 3:
-        make_maze_recursive_call(maze, y, bottom, left, x)
-
-
-def make_maze_recursion(maze_width, maze_height):
-    #Make the maze and start the process
-    maze = create_empty_grid(maze_width, maze_height)
-    make_maze_recursive_call(maze, maze_height - 1, 0, 0, maze_width - 1)
-    #return final result
-    return maze
-
-def draw_main_screen(x: int, y: int):
-    # sets a new background, draws title text
-    scale = 1
-    texture = arcade.load_texture("mainscreen.png")
-    arcade.draw_texture_rectangle(x, y, scale * texture.width,
-                                  scale * texture.height, texture, 0)
-
-
-def draw_background():
-    arcade.set_background_color(arcade.csscolor.LIGHT_GOLDENROD_YELLOW)
-
-def draw_end_screen(x: int, y: int, winner):
-    scale = 3
-    #sets a new background, draws end game text
-    texture = arcade.load_texture("endscreen.png")
-    arcade.draw_texture_rectangle(x, y, scale * texture.width,
-                                  scale * texture.height, texture, 0)
-    arcade.draw_text("GAME OVER!", 270, 500, arcade.color.BLACK, 65)
-    arcade.draw_text("The winner of the game is...", 270, 300, arcade.color.BLACK, 30)
-    arcade.draw_text(winner, 420, 230, arcade.color.BLACK, 30)
-    
-
-
-def pause_screen():
-    """ creates a pause screen """
-    scale = 1
-    texture = arcade.load_texture("pausescreen.png")
-    arcade.draw_texture_rectangle (500, 400, scale * texture.width,
-                                  scale * texture.height, texture, 0)
 
 
 #Main application class
@@ -434,6 +334,109 @@ class MyGame(arcade.Window):
             
             self.total_time += delta_time
 
+#Create maze using a recurive algorithm 
+def create_empty_grid(x: int, y: int, default_value=TILE_EMPTY):
+    #Create empty grid list
+    grid = []
+    #Create grid for screen
+    for row in range(y):
+        grid.append([])
+        for column in range(x):
+            grid[row].append(default_value)
+    return grid
+
+def make_maze_recursive_call(maze, top, bottom, left, right):
+    
+    # Divide up the maze into four functions with three gaps generated randomly
+    # Figure out where to divide horizontally
+    start = bottom + 2
+    end = top - 1
+    y = random.randrange(start, end, 2)
+
+    # Do the division
+    for column in range(left + 1, right):
+        maze[y][column] = TILE_CRATE
+
+    # Figure out where to divide vertically
+    start_range = left + 2
+    end_range = right - 1
+    x = random.randrange(start_range, end_range, 2)
+
+    # Do the division
+    for row in range(bottom + 1, top):
+        maze[row][x] = TILE_CRATE
+
+    # Figure out which wall does NOT get a gap.
+    wall = random.randrange(4)
+    if wall != 0:
+        gap = random.randrange(left + 1, x, 2)
+        maze[y][gap] = TILE_EMPTY
+
+    if wall != 1:
+        gap = random.randrange(x + 1, right, 2)
+        maze[y][gap] = TILE_EMPTY
+
+    if wall != 2:
+        gap = random.randrange(bottom + 1, y, 2)
+        maze[gap][x] = TILE_EMPTY
+
+    if wall != 3:
+        gap = random.randrange(y + 1, top, 2)
+        maze[gap][x] = TILE_EMPTY
+
+    # If there's enough space, to a recursive call.
+    if top > y + 3 and x > left + 3:
+        make_maze_recursive_call(maze, top, y, left, x)
+
+    if top > y + 3 and x + 3 < right:
+        make_maze_recursive_call(maze, top, y, x, right)
+
+    if bottom + 3 < y and x + 3 < right:
+        make_maze_recursive_call(maze, y, bottom, x, right)
+
+    if bottom + 3 < y and x > left + 3:
+        make_maze_recursive_call(maze, y, bottom, left, x)
+
+
+def make_maze_recursion(maze_width, maze_height):
+    #Make the maze and start the process
+    maze = create_empty_grid(maze_width, maze_height)
+    make_maze_recursive_call(maze, maze_height - 1, 0, 0, maze_width - 1)
+    #return final result
+    return maze
+
+def draw_main_screen(x: int, y: int):
+    # sets a new background, draws title text
+    scale = 1
+    texture = arcade.load_texture("mainscreen.png")
+    arcade.draw_texture_rectangle(x, y, scale * texture.width,
+                                  scale * texture.height, texture, 0)
+
+
+def draw_background():
+    arcade.set_background_color(arcade.csscolor.LIGHT_GOLDENROD_YELLOW)
+
+def draw_end_screen(x: int, y: int, winner):
+    scale = 3
+    #sets a new background, draws end game text
+    texture = arcade.load_texture("endscreen.png")
+    arcade.draw_texture_rectangle(x, y, scale * texture.width,
+                                  scale * texture.height, texture, 0)
+    arcade.draw_text("GAME OVER!", 270, 500, arcade.color.BLACK, 65)
+    arcade.draw_text("The winner of the game is...", 270, 300, arcade.color.BLACK, 30)
+    arcade.draw_text(winner, 420, 230, arcade.color.BLACK, 30)
+    
+
+
+def pause_screen():
+    """ creates a pause screen """
+    scale = 1
+    texture = arcade.load_texture("pausescreen.png")
+    arcade.draw_texture_rectangle (500, 400, scale * texture.width,
+                                  scale * texture.height, texture, 0)
+
+
+    
 def main():
     """ Main method """
     window = MyGame()
