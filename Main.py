@@ -12,7 +12,6 @@ BUNNY_SCALING = 0.05
 TURTLE_SCALING = 0.8
 TILE_SCALING = 0.5
 COIN_SCALING = 0.35
-
 SPRITE_SCALING = 0.25
 DIVIDER_SCALING = 0.50
 SPRITE_SIZE = 32
@@ -20,18 +19,12 @@ SPRITE_SIZE = 32
 # Speed constant 
 PLAYER_MOVEMENT_SPEED = 5
 
+#Maze Constants 
 TILE_EMPTY = 0
 TILE_CRATE = 1
-
-# Maze must have an ODD number of rows and columns.
-# Walls go on EVEN rows/columns.
-# Openings go on ODD rows/columns
-
 MAZE_HEIGHT = 51
 MAZE_WIDTH = 51
 
-
-MERGE_SPRITES = True
 
 # How many pixels to keep as a minimum margin between the character
 # and the edge of the screen.
@@ -44,7 +37,7 @@ end_game = False
 pause = False
 
 
-#Create maze
+#Create maze using a recurive algorithm 
 def create_empty_grid(width, height, default_value=TILE_EMPTY):
     """ Create an empty grid. """
     grid = []
@@ -157,7 +150,6 @@ def draw_end_screen(x: int, y: int, winner):
     texture = arcade.load_texture("endscreen.png")
     arcade.draw_texture_rectangle(x, y, scale * texture.width,
                                   scale * texture.height, texture, 0)
-
     arcade.draw_text("GAME OVER!", 270, 500, arcade.color.BLACK, 65)
     arcade.draw_text("The winner of the game is...", 270, 300, arcade.color.BLACK, 30)
     arcade.draw_text(winner, 420, 230, arcade.color.BLACK, 30)
@@ -200,12 +192,12 @@ class MyGame(arcade.Window):
         # Keep track of the score
         self.score_bunny = 0
         self.score_turtle = 0
-    
 
         # Load sounds
         self.collect_coin_sound_bunny = arcade.load_sound("coin1.wav")
         self.collect_coin_sound_turtle = arcade.load_sound("coin5.wav")
         
+        # Keep track of time
         self.total_time = 00.0
 
     def setup(self):
@@ -216,13 +208,10 @@ class MyGame(arcade.Window):
         self.score_bunny = 0
         self.score_turtle = 0
 
-
         #creating the sprite lists
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList(use_spatial_hash=True) #spatial_hash is used because 
         self.coin_list = arcade.SpriteList(use_spatial_hash=True) #the wall and coins won't move
-        
-
 
         #Creates the ground
         for x in range(0, 1250, 64):
@@ -231,8 +220,7 @@ class MyGame(arcade.Window):
             wall.center_y = 0
             self.wall_list.append(wall)
 
-
-        #creates the top part
+        #Creates the top part
         for x in range(0, 1250, 64):
             wall = arcade.Sprite("dirtCenter.png", TILE_SCALING)
             wall.center_x = x
@@ -242,7 +230,6 @@ class MyGame(arcade.Window):
         # Create the maze
         maze = make_maze_recursion(MAZE_WIDTH, MAZE_HEIGHT)
         
-
         # Create the right wall
         for x in range(0, 1000, 10):
             wall = arcade.Sprite("dirtCenter.png",  TILE_SCALING)
@@ -258,12 +245,13 @@ class MyGame(arcade.Window):
                         wall.center_x = column * SPRITE_SIZE + SPRITE_SIZE / 2
                         wall.center_y = row * SPRITE_SIZE + SPRITE_SIZE / 2
                         self.wall_list.append(wall)
-        #set up bunny
+
+        #set up bunny sprite
         image_source_1 = "bunny.png"
         self.bunny_sprite = arcade.Sprite(image_source_1, BUNNY_SCALING)
         self.player_list.append(self.bunny_sprite)
         
-        #set up turtle character
+        #set up turtle sprite
         image_source_2 = "turtle.png"
         self.turtle_sprite = arcade.Sprite(image_source_2, TURTLE_SCALING)
         self.player_list.append(self.turtle_sprite)
@@ -289,7 +277,7 @@ class MyGame(arcade.Window):
                 players_placed = True
             
     
-        
+        #set up physics engine for player sprites
         self.physics_engine_bunny = arcade.PhysicsEngineSimple(self.bunny_sprite, self.wall_list)
         self.physics_engine_turtle = arcade.PhysicsEngineSimple(self.turtle_sprite, self.wall_list)
 
