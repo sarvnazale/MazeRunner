@@ -27,11 +27,10 @@ TILE_CRATE = 1
 # Maze must have an ODD number of rows and columns.
 # Walls go on EVEN rows/columns.
 # Openings go on ODD rows/columns
-#MAZE_HEIGHT = 51
-#MAZE_WIDTH = 51
 
-MAZE_HEIGHT = 41
-MAZE_WIDTH = 41
+MAZE_HEIGHT = 51
+MAZE_WIDTH = 51
+
 
 MERGE_SPRITES = True
 
@@ -42,7 +41,6 @@ VIEWPORT_MARGIN = 200
 #set booleans for game control
 start_game = True
 run_game = False
-level_two = False
 end_game = False
 pause = False
 
@@ -115,8 +113,7 @@ def pause_screen():
     arcade.draw_texture_rectangle (500, 400, scale * texture.width,
                                   scale * texture.height, texture, 0)
 
-def second_level():
-    pass
+
 
 #Main application class
 class MyGame(arcade.Window):
@@ -349,8 +346,6 @@ class MyGame(arcade.Window):
         if pause:
             pause_screen()
 
-        if level_two:
-            second_level()
    
     def on_update(self, delta_time):
         global run_game 
@@ -391,7 +386,7 @@ class MyGame(arcade.Window):
 
             if len(self.coin_list) == 0:
                 run_game = False
-                level_two = True
+              
             
 
 
