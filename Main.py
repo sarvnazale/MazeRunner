@@ -412,6 +412,7 @@ class MyGame(arcade.Window):
             else:
                 draw_end_screen(500, 375, "It's a tie!")
             
+            
 
    
     def on_update(self, delta_time):
